@@ -68,121 +68,96 @@
 </div>
 
 <script>
-const boyfriendLines = [
-  "No.",
-  "I’m choosing peace.",
-  "Interesting accusation.",
-  "That’s wild.",
-  "This feels like a trap.",
-  "I need time to misunderstand this."
+// OPENING
+const gfStart = [
+  "Hey.",
+  "Can I ask you something?",
+  "Quick question.",
+  "Be honest.",
+  "Why did you like that post?"
 ];
 
-const girlfriendLines = [
-  "Why are you like this?",
-  "So we’re doing silence now?",
-  "You replied too fast.",
-  "I know you saw that.",
-  "Wow. Just wow.",
-  "This is why I overthink."
+const bfStart = [
+  "Oh no.",
+  "I already regret this.",
+  "Define question.",
+  "This feels illegal.",
+  "I’m listening nervously."
 ];
 
-const popSound = new Audio("pop.mp3");
-popSound.volume = 0.6;
+// SUSPICION
+const gfMid1 = [
+  "You replied fast earlier.",
+  "You were online.",
+  "You saw my message.",
+  "That typing bubble disappeared.",
+  "So silence was a choice."
+];
 
-let voicesReady = false;
-let availableVoices = [];
+const bfMid1 = [
+  "Time is fake.",
+  "I blinked.",
+  "I was breathing.",
+  "I emotionally loaded the reply.",
+  "I was buffering."
+];
 
-speechSynthesis.onvoiceschanged = () => {
-  availableVoices = speechSynthesis.getVoices();
-  voicesReady = true;
-};
+// PETTY ESCALATION
+const gfMid2 = [
+  "Interesting excuse.",
+  "That made it worse.",
+  "Say it again but honest.",
+  "I’ll remember this.",
+  "Wow."
+];
 
-function speak(text, who, onDone) {
-  if (!voicesReady) {
-    setTimeout(() => speak(text, who, onDone), 100);
-    return;
-  }
+const bfMid2 = [
+  "I stand by nothing.",
+  "I plead confusion.",
+  "This is getting hostile.",
+  "I need legal advice.",
+  "I miss who I was before this."
+];
 
-  const utterance = new SpeechSynthesisUtterance(text);
+// ENDINGS
+const gfEnd = [
+  "So no explanation?",
+  "That’s your final answer?",
+  "I expected less.",
+  "Okay.",
+  "Noted."
+];
 
-  const female = availableVoices.find(v => v.name.toLowerCase().includes("female"));
-  const male = availableVoices.find(v => v.name.toLowerCase().includes("male"));
-
-  utterance.voice = who === "girlfriend"
-    ? (female || availableVoices[0])
-    : (male || availableVoices[0]);
-
-  utterance.rate = who === "girlfriend" ? 1.05 : 0.9;
-  utterance.pitch = who === "girlfriend" ? 1.2 : 0.8;
-
-  let finished = false;
-
-  utterance.onend = () => {
-    if (!finished) {
-      finished = true;
-      onDone();
-    }
-  };
-
-  speechSynthesis.speak(utterance);
-
-  // SAFETY FALLBACK (critical)
-  const estimatedTime = Math.max(700, text.length * 60);
-  setTimeout(() => {
-    if (!finished) {
-      finished = true;
-      speechSynthesis.cancel();
-      onDone();
-    }
-  }, estimatedTime);
-}
+const bfEnd = [
+  "…",
+  "I choose silence.",
+  "I will not survive this.",
+  "Message received spiritually.",
+  "Understood."
+];
 
 function generateMessages() {
-  const list = [];
-  let gf = true;
-  const total = Math.floor(Math.random() * 5) + 10;
+  return [
+    { who: "girlfriend", text: random(gfStart) },
+    { who: "boyfriend", text: random(bfStart) },
 
-  for (let i = 0; i < total; i++) {
-    list.push({
-      who: gf ? "girlfriend" : "boyfriend",
-      text: gf
-        ? girlfriendLines[Math.floor(Math.random() * girlfriendLines.length)]
-        : boyfriendLines[Math.floor(Math.random() * boyfriendLines.length)]
-    });
-    gf = !gf;
-  }
-  return list;
+    { who: "girlfriend", text: random(gfMid1) },
+    { who: "boyfriend", text: random(bfMid1) },
+
+    { who: "girlfriend", text: random(gfMid2) },
+    { who: "boyfriend", text: random(bfMid2) },
+
+    { who: "girlfriend", text: random(gfEnd) },
+
+    // 50% chance of boyfriend reply (awkward silence ending)
+    ...(Math.random() > 0.5
+      ? [{ who: "boyfriend", text: random(bfEnd) }]
+      : [])
+  ];
 }
 
-function playSequence(messages, index = 0) {
-  if (index >= messages.length) return;
-
-  const chat = document.getElementById("chat");
-  const msg = messages[index];
-
-  popSound.currentTime = 0;
-  popSound.play();
-
-  setTimeout(() => {
-    const div = document.createElement("div");
-    div.className = "msg " + msg.who;
-    div.innerText = msg.text;
-    chat.appendChild(div);
-    chat.scrollTop = chat.scrollHeight;
-
-    speak(msg.text, msg.who, () => {
-      setTimeout(() => playSequence(messages, index + 1), 300);
-    });
-  }, 200);
-}
-
-function generateChat() {
-  const chat = document.getElementById("chat");
-  chat.innerHTML = "";
-  speechSynthesis.cancel();
-
-  const messages = generateMessages();
-  playSequence(messages);
+function random(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
 }
 </script>
 
