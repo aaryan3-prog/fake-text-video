@@ -89,48 +89,72 @@ const girlfriendLines = [
 const popSound = new Audio("pop.mp3");
 popSound.volume = 0.6;
 
+let voicesReady = false;
+let availableVoices = [];
+
+speechSynthesis.onvoiceschanged = () => {
+  availableVoices = speechSynthesis.getVoices();
+  voicesReady = true;
+};
+
 function speak(text, who, onDone) {
-  const utterance = new SpeechSynthesisUtterance(text);
-  const voices = speechSynthesis.getVoices();
-
-  const femaleVoice = voices.find(v => v.name.toLowerCase().includes("female"));
-  const maleVoice = voices.find(v => v.name.toLowerCase().includes("male"));
-
-  utterance.voice = who === "girlfriend"
-    ? (femaleVoice || voices[0])
-    : (maleVoice || voices[0]);
-
-  if (who === "girlfriend") {
-    utterance.rate = 1.05;
-    utterance.pitch = 1.2;
-  } else {
-    utterance.rate = 0.9;
-    utterance.pitch = 0.8;
+  if (!voicesReady) {
+    setTimeout(() => speak(text, who, onDone), 100);
+    return;
   }
 
-  utterance.onend = onDone;
+  const utterance = new SpeechSynthesisUtterance(text);
+
+  const female = availableVoices.find(v => v.name.toLowerCase().includes("female"));
+  const male = availableVoices.find(v => v.name.toLowerCase().includes("male"));
+
+  utterance.voice = who === "girlfriend"
+    ? (female || availableVoices[0])
+    : (male || availableVoices[0]);
+
+  utterance.rate = who === "girlfriend" ? 1.05 : 0.9;
+  utterance.pitch = who === "girlfriend" ? 1.2 : 0.8;
+
+  let finished = false;
+
+  utterance.onend = () => {
+    if (!finished) {
+      finished = true;
+      onDone();
+    }
+  };
+
   speechSynthesis.speak(utterance);
+
+  // SAFETY FALLBACK (critical)
+  const estimatedTime = Math.max(700, text.length * 60);
+  setTimeout(() => {
+    if (!finished) {
+      finished = true;
+      speechSynthesis.cancel();
+      onDone();
+    }
+  }, estimatedTime);
 }
 
 function generateMessages() {
-  const messages = [];
-  let isGirlfriend = true;
+  const list = [];
+  let gf = true;
   const total = Math.floor(Math.random() * 5) + 10;
 
   for (let i = 0; i < total; i++) {
-    messages.push({
-      who: isGirlfriend ? "girlfriend" : "boyfriend",
-      text: isGirlfriend
+    list.push({
+      who: gf ? "girlfriend" : "boyfriend",
+      text: gf
         ? girlfriendLines[Math.floor(Math.random() * girlfriendLines.length)]
         : boyfriendLines[Math.floor(Math.random() * boyfriendLines.length)]
     });
-    isGirlfriend = !isGirlfriend;
+    gf = !gf;
   }
-
-  return messages;
+  return list;
 }
 
-function playMessageSequence(messages, index = 0) {
+function playSequence(messages, index = 0) {
   if (index >= messages.length) return;
 
   const chat = document.getElementById("chat");
@@ -147,11 +171,8 @@ function playMessageSequence(messages, index = 0) {
     chat.scrollTop = chat.scrollHeight;
 
     speak(msg.text, msg.who, () => {
-      setTimeout(() => {
-        playMessageSequence(messages, index + 1);
-      }, index === messages.length - 1 ? 600 : 300);
+      setTimeout(() => playSequence(messages, index + 1), 300);
     });
-
   }, 200);
 }
 
@@ -161,7 +182,7 @@ function generateChat() {
   speechSynthesis.cancel();
 
   const messages = generateMessages();
-  playMessageSequence(messages);
+  playSequence(messages);
 }
 </script>
 
