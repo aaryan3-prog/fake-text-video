@@ -89,9 +89,35 @@ const girlfriendLines = [
 const popSound = new Audio("pop.mp3");
 popSound.volume = 0.6;
 
+function speak(text, who) {
+  const utterance = new SpeechSynthesisUtterance(text);
+
+  const voices = speechSynthesis.getVoices();
+
+  // Try to pick male/female
+  const femaleVoice = voices.find(v => v.name.toLowerCase().includes("female"));
+  const maleVoice = voices.find(v => v.name.toLowerCase().includes("male"));
+
+  utterance.voice = who === "girlfriend"
+    ? (femaleVoice || voices[0])
+    : (maleVoice || voices[0]);
+
+  // Emotion simulation
+  if (who === "girlfriend") {
+    utterance.rate = 1.05;   // slightly faster
+    utterance.pitch = 1.2;   // higher pitch
+  } else {
+    utterance.rate = 0.9;    // slower
+    utterance.pitch = 0.8;   // lower pitch
+  }
+
+  speechSynthesis.speak(utterance);
+}
+
 function generateChat() {
   const chat = document.getElementById("chat");
   chat.innerHTML = "";
+  speechSynthesis.cancel();
 
   let totalMessages = Math.floor(Math.random() * 5) + 10;
   let isGirlfriendTurn = true;
@@ -113,10 +139,12 @@ function generateChat() {
         div.innerText = text;
         chat.appendChild(div);
         chat.scrollTop = chat.scrollHeight;
+
+        speak(text, who);
       }, 200);
     }, delay);
 
-    delay += 900;
+    delay += 1200;
     isGirlfriendTurn = !isGirlfriendTurn;
   }
 }
