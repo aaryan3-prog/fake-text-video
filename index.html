@@ -71,34 +71,29 @@
 const boyfriendLines = [
   "No.",
   "I’m choosing peace.",
-  "I read that message spiritually.",
-  "I blinked and missed the question.",
   "Interesting accusation.",
-  "I was going to reply but then I didn’t.",
-  "This feels like a trap.",
-  "I plead the fifth.",
   "That’s wild.",
+  "This feels like a trap.",
   "I need time to misunderstand this."
 ];
 
 const girlfriendLines = [
   "Why are you like this?",
   "So we’re doing silence now?",
-  "That response felt personal.",
-  "You replied too fast. Suspicious.",
-  "Are you emotionally buffering?",
-  "Say less. Actually say more.",
-  "Wow. Just wow.",
+  "You replied too fast.",
   "I know you saw that.",
-  "This is why I overthink.",
-  "I’m screenshotting this energy."
+  "Wow. Just wow.",
+  "This is why I overthink."
 ];
+
+const popSound = new Audio("pop.mp3");
+popSound.volume = 0.6;
 
 function generateChat() {
   const chat = document.getElementById("chat");
   chat.innerHTML = "";
 
-  let totalMessages = Math.floor(Math.random() * 5) + 10; // 10–14
+  let totalMessages = Math.floor(Math.random() * 5) + 10;
   let isGirlfriendTurn = true;
   let delay = 0;
 
@@ -109,26 +104,21 @@ function generateChat() {
       : boyfriendLines[Math.floor(Math.random() * boyfriendLines.length)];
 
     setTimeout(() => {
-      const div = document.createElement("div");
-      div.className = "msg " + who;
-      div.innerText = text;
-      chat.appendChild(div);
-      chat.scrollTop = chat.scrollHeight;
+      popSound.currentTime = 0;
+      popSound.play();
+
+      setTimeout(() => {
+        const div = document.createElement("div");
+        div.className = "msg " + who;
+        div.innerText = text;
+        chat.appendChild(div);
+        chat.scrollTop = chat.scrollHeight;
+      }, 200);
     }, delay);
 
-    delay += 800;
+    delay += 900;
     isGirlfriendTurn = !isGirlfriendTurn;
   }
-
-  // Punchline or silence ending
-  setTimeout(() => {
-    if (Math.random() > 0.5) {
-      const div = document.createElement("div");
-      div.className = "msg boyfriend";
-      div.innerText = "…";
-      chat.appendChild(div);
-    }
-  }, delay + 600);
 }
 </script>
 
