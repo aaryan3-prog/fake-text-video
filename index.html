@@ -89,12 +89,10 @@ const girlfriendLines = [
 const popSound = new Audio("pop.mp3");
 popSound.volume = 0.6;
 
-function speak(text, who) {
+function speak(text, who, onDone) {
   const utterance = new SpeechSynthesisUtterance(text);
-
   const voices = speechSynthesis.getVoices();
 
-  // Try to pick male/female
   const femaleVoice = voices.find(v => v.name.toLowerCase().includes("female"));
   const maleVoice = voices.find(v => v.name.toLowerCase().includes("male"));
 
@@ -102,16 +100,59 @@ function speak(text, who) {
     ? (femaleVoice || voices[0])
     : (maleVoice || voices[0]);
 
-  // Emotion simulation
   if (who === "girlfriend") {
-    utterance.rate = 1.05;   // slightly faster
-    utterance.pitch = 1.2;   // higher pitch
+    utterance.rate = 1.05;
+    utterance.pitch = 1.2;
   } else {
-    utterance.rate = 0.9;    // slower
-    utterance.pitch = 0.8;   // lower pitch
+    utterance.rate = 0.9;
+    utterance.pitch = 0.8;
   }
 
+  utterance.onend = onDone;
   speechSynthesis.speak(utterance);
+}
+
+function generateMessages() {
+  const messages = [];
+  let isGirlfriend = true;
+  const total = Math.floor(Math.random() * 5) + 10;
+
+  for (let i = 0; i < total; i++) {
+    messages.push({
+      who: isGirlfriend ? "girlfriend" : "boyfriend",
+      text: isGirlfriend
+        ? girlfriendLines[Math.floor(Math.random() * girlfriendLines.length)]
+        : boyfriendLines[Math.floor(Math.random() * boyfriendLines.length)]
+    });
+    isGirlfriend = !isGirlfriend;
+  }
+
+  return messages;
+}
+
+function playMessageSequence(messages, index = 0) {
+  if (index >= messages.length) return;
+
+  const chat = document.getElementById("chat");
+  const msg = messages[index];
+
+  popSound.currentTime = 0;
+  popSound.play();
+
+  setTimeout(() => {
+    const div = document.createElement("div");
+    div.className = "msg " + msg.who;
+    div.innerText = msg.text;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+
+    speak(msg.text, msg.who, () => {
+      setTimeout(() => {
+        playMessageSequence(messages, index + 1);
+      }, index === messages.length - 1 ? 600 : 300);
+    });
+
+  }, 200);
 }
 
 function generateChat() {
@@ -119,34 +160,8 @@ function generateChat() {
   chat.innerHTML = "";
   speechSynthesis.cancel();
 
-  let totalMessages = Math.floor(Math.random() * 5) + 10;
-  let isGirlfriendTurn = true;
-  let delay = 0;
-
-  for (let i = 0; i < totalMessages; i++) {
-    const who = isGirlfriendTurn ? "girlfriend" : "boyfriend";
-    const text = isGirlfriendTurn
-      ? girlfriendLines[Math.floor(Math.random() * girlfriendLines.length)]
-      : boyfriendLines[Math.floor(Math.random() * boyfriendLines.length)];
-
-    setTimeout(() => {
-      popSound.currentTime = 0;
-      popSound.play();
-
-      setTimeout(() => {
-        const div = document.createElement("div");
-        div.className = "msg " + who;
-        div.innerText = text;
-        chat.appendChild(div);
-        chat.scrollTop = chat.scrollHeight;
-
-        speak(text, who);
-      }, 200);
-    }, delay);
-
-    delay += 1200;
-    isGirlfriendTurn = !isGirlfriendTurn;
-  }
+  const messages = generateMessages();
+  playMessageSequence(messages);
 }
 </script>
 
