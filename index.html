@@ -68,29 +68,68 @@
 </div>
 
 <script>
-  const messages = [
-    { who: "girlfriend", text: "Are you ignoring me?" },
-    { who: "boyfriend", text: "No." },
-    { who: "girlfriend", text: "That was a very fast no." },
-    { who: "boyfriend", text: "I rehearse." },
-    { who: "girlfriend", text: "You’re playing games again, aren’t you?" },
-    { who: "boyfriend", text: "Emotionally? Yes." }
-  ];
+const boyfriendLines = [
+  "No.",
+  "I’m choosing peace.",
+  "I read that message spiritually.",
+  "I blinked and missed the question.",
+  "Interesting accusation.",
+  "I was going to reply but then I didn’t.",
+  "This feels like a trap.",
+  "I plead the fifth.",
+  "That’s wild.",
+  "I need time to misunderstand this."
+];
 
-  function generateChat() {
-    const chat = document.getElementById("chat");
-    chat.innerHTML = "";
+const girlfriendLines = [
+  "Why are you like this?",
+  "So we’re doing silence now?",
+  "That response felt personal.",
+  "You replied too fast. Suspicious.",
+  "Are you emotionally buffering?",
+  "Say less. Actually say more.",
+  "Wow. Just wow.",
+  "I know you saw that.",
+  "This is why I overthink.",
+  "I’m screenshotting this energy."
+];
 
-    messages.forEach((msg, i) => {
-      setTimeout(() => {
-        const div = document.createElement("div");
-        div.className = "msg " + msg.who;
-        div.innerText = msg.text;
-        chat.appendChild(div);
-        chat.scrollTop = chat.scrollHeight;
-      }, i * 800);
-    });
+function generateChat() {
+  const chat = document.getElementById("chat");
+  chat.innerHTML = "";
+
+  let totalMessages = Math.floor(Math.random() * 5) + 10; // 10–14
+  let isGirlfriendTurn = true;
+  let delay = 0;
+
+  for (let i = 0; i < totalMessages; i++) {
+    const who = isGirlfriendTurn ? "girlfriend" : "boyfriend";
+    const text = isGirlfriendTurn
+      ? girlfriendLines[Math.floor(Math.random() * girlfriendLines.length)]
+      : boyfriendLines[Math.floor(Math.random() * boyfriendLines.length)];
+
+    setTimeout(() => {
+      const div = document.createElement("div");
+      div.className = "msg " + who;
+      div.innerText = text;
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+    }, delay);
+
+    delay += 800;
+    isGirlfriendTurn = !isGirlfriendTurn;
   }
+
+  // Punchline or silence ending
+  setTimeout(() => {
+    if (Math.random() > 0.5) {
+      const div = document.createElement("div");
+      div.className = "msg boyfriend";
+      div.innerText = "…";
+      chat.appendChild(div);
+    }
+  }, delay + 600);
+}
 </script>
 
 </body>
